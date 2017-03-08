@@ -1,131 +1,72 @@
 ﻿Public Class ShowTimeLine
-    'Public Sub New()
 
-    '    ' この呼び出しはデザイナーで必要です。
-    '    InitializeComponent()
+    Private Sub ShowTimeLine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        TimeLineUserControl1.SuspendLayout()
+        TimeLineUserControl1.Title = "発注明細：17-03-5111-00"
 
-    '    ' InitializeComponent() 呼び出しの後で初期化を追加します。
-    '    Dim label1 As New PictureBox
-    '    label1.AutoSize = False
-    '    'label1.BorderStyle = BorderStyle.None
+        Dim ds As New DataSet
 
-    '    label1.Location = New Point(400, 30)
-    '    label1.Size = New Size(20, 20)
+#Region "DataSet Initialize"
+        Dim dt As New DataTable("WarehouseStatusTable")
 
-    '    Me.Controls.Add(label1)
+        'dt.Columns.Add("OperateDate", GetType(Date), "Stock in or Stcok out Date")
+        'dt.Columns.Add("Count", GetType(Integer), "Goods Count")
+        'dt.Columns.Add("Total", GetType(Integer), "Stocked Goods Total Count")
+        'dt.Columns.Add("OperateType", GetType(Boolean), "Stocked Type[true=stock in  false=stock out]")
 
-    'End Sub
+        dt.Columns.Add("OperateDate", GetType(Date))
+        dt.Columns.Add("Count", GetType(Integer))
+        dt.Columns.Add("Total", GetType(Integer))
+        dt.Columns.Add("OperateType", GetType(Boolean))
 
-    Private Sub Canvas_Paint(sender As Object, e As PaintEventArgs) Handles Canvas.Paint
-        Dim pic As New Bitmap(360, 464)
+        ds.Tables.Add(dt)
 
-        '描画先とするImageオブジェクトを作成する
+        Dim r As DataRow
 
-        'ImageオブジェクトのGraphicsオブジェクトを作成する
-        Dim g As Graphics = Graphics.FromImage(pic)
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 2, 15), 5000, 5000, True}
+        dt.Rows.Add(r)
 
-        'Dim g As Graphics = e.Graphics
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 2, 21), 5000, 10000, True}
+        dt.Rows.Add(r)
 
-        'Penオブジェクトの作成(幅3黒色)
-        Dim linePen As New Pen(Color.DarkGray, 2)
-        linePen.DashStyle = Drawing2D.DashStyle.Dash
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 2, 23), 2000, 8000, False}
+        dt.Rows.Add(r)
 
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 3, 7), 5000, 13000, True}
+        dt.Rows.Add(r)
 
-        'Gridを描く
-        'With e.ClipRectangle
-        '    For i = 0 To e.ClipRectangle.Height / 10
-        '        Dim grid_y As Integer = 10 * (i + 1)
-        '        g.DrawLine(Pens.LightGray, 0, grid_y, .Width, grid_y)
-        '    Next
+        'r = dt.NewRow
+        'r.ItemArray = New Object() {New Date(2017, 3, 7), 5000, 13000, True}
+        'dt.Rows.Add(r)
 
-        '    For i = 0 To e.ClipRectangle.Width / 10
-        '        Dim grid_x As Integer = 10 * (i + 1)
-        '        g.DrawLine(Pens.LightGray, grid_x, 0, grid_x, .Height)
-        '    Next
-        'End With
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 3, 23), 5000, 8000, False}
+        dt.Rows.Add(r)
 
-        Dim font_title As Font = New Font("MS UI Gothic", 9, FontStyle.Bold)
-        g.DrawString("発注明細№：17-03-5111-00", font_title, Brushes.Black, 5, 5)
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 3, 24), 4999, 3001, False}
+        dt.Rows.Add(r)
 
+        r = dt.NewRow
+        r.ItemArray = New Object() {New Date(2017, 3, 25), 3001, 0, False}
+        dt.Rows.Add(r)
 
-        Dim f As Font = New Font("MS UI Gothic", 9)
-        Dim x As Integer = 160
+        ds.AcceptChanges()
+#End Region
 
-        g.DrawLine(linePen, x + 10, 40, x + 10, 430)
+        With ds.Tables(0)
+            TimeLineUserControl1.DataMember = .TableName
+            TimeLineUserControl1.OperateDateColumn = .Columns.Item(0).ColumnName
+            TimeLineUserControl1.CountColumn = .Columns.Item(1).ColumnName
+            TimeLineUserControl1.TotalColumn = .Columns.Item(2).ColumnName
+            TimeLineUserControl1.TypeColumn = .Columns.Item(3).ColumnName
+        End With
 
-        Dim p As Point = Canvas.PointToClient(MousePosition)
-        Dim disp_p As New Point(p.X + 15, p.Y + 15)
-        If p.X > 160 AndAlso p.X < 180 Then
-            Select Case p.Y
-                Case 30 To 50
-                    g.DrawString("在庫  5,000", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 30 - 5, 30, 30))
-                Case 90 To 110
-                    g.DrawString("在庫 10,000", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 90 - 5, 30, 30))
-                Case 120 To 140
-                    g.DrawString("在庫  8,000", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 120 - 5, 30, 30))
-                Case 240 To 260
-                    g.DrawString("在庫 13,000", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 240 - 5, 30, 30))
-                Case 360 To 380
-                    g.DrawString("在庫  8,000", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 360 - 5, 30, 30))
-                Case 390 To 410
-                    g.DrawString("在庫  3,001", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 390 - 5, 30, 30))
-                Case 420 To 440
-                    g.DrawString("在庫      0", f, Brushes.Red, disp_p)
-                    g.FillEllipse(Brushes.LightPink, New RectangleF(x - 5, 420 - 5, 30, 30))
-                Case Else
-            End Select
-        End If
-
-        g.FillEllipse(Brushes.LightGreen, New RectangleF(x, 30, 20, 20))
-        g.DrawString("2017.02.15  入庫 5,000", f, Brushes.Black, x + 30, 35)
-
-        g.FillEllipse(Brushes.LightGreen, New RectangleF(x, 90, 20, 20))
-        g.DrawString("2017.02.21  入庫 5,000", f, Brushes.Black, x + 30, 95)
-
-        g.FillEllipse(Brushes.Blue, New RectangleF(x, 120, 20, 20))
-        g.DrawString("2017.02.23  出庫 2,000", f, Brushes.Black, x - 130, 125)
-
-        g.FillEllipse(Brushes.LightGreen, New RectangleF(x, 240, 20, 20))
-        g.DrawString("2017.03.07  入庫 5,000", f, Brushes.Black, x + 30, 245)
-
-        g.FillEllipse(Brushes.Blue, New RectangleF(x, 360, 20, 20))
-        g.DrawString("2017.03.23  出庫 5,000", f, Brushes.Black, x - 130, 365)
-
-        g.FillEllipse(Brushes.Blue, New RectangleF(x, 390, 20, 20))
-        g.DrawString("2017.03.24  出庫 4,999", f, Brushes.Black, x - 130, 395)
-
-        g.FillEllipse(Brushes.Blue, New RectangleF(x, 420, 20, 20))
-        g.DrawString("2017.03.27  出庫 3,001", f, Brushes.Black, x - 130, 425)
-
-        linePen.Dispose()
-        g.Dispose()
-
-        'Canvasに表示する
-        Canvas.Image = pic
-    End Sub
-
-    Private Sub Canvas_Click(sender As Object, e As EventArgs) Handles Canvas.Click
-        'Dim p As Point = Canvas.PointToClient(MousePosition)
-        'If 160 < p.X < 180 Then
-        '    Select Case p.Y
-        '        Case 30 To 50
-        '            msgTooltip.SetToolTip(Canvas, "在庫 5,000")
-        '        Case 90 To 110
-        '            msgTooltip.SetToolTip(Canvas, "在庫 10,000")
-        '        Case 120 To 140
-        '            msgTooltip.SetToolTip(Canvas, "在庫 8,000")
-        '        Case 240 To 260
-        '        Case 360 To 380
-        '        Case 390 To 410
-        '        Case 420 To 440
-        '        Case Else
-        '    End Select
-        'End If
+        TimeLineUserControl1.DataSource = ds
+        TimeLineUserControl1.ResumeLayout()
     End Sub
 End Class

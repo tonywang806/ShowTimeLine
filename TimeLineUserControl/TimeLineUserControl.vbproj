@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{52ECBF6D-DDC4-4614-B65D-5D6C0E91F399}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <StartupObject>TimeLinesDemo.My.MyApplication</StartupObject>
-    <RootNamespace>TimeLinesDemo</RootNamespace>
-    <AssemblyName>TimeLinesDemo</AssemblyName>
+    <ProjectGuid>{1973CB74-BB16-4D7F-90FE-3EA7C08D602E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <StartupObject>
+    </StartupObject>
+    <RootNamespace>TimeLineUserControl</RootNamespace>
+    <AssemblyName>TimeLineUserControl</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <MyType>WindowsForms</MyType>
+    <MyType>Windows</MyType>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
@@ -21,7 +22,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>TimeLinesDemo.xml</DocumentationFile>
+    <DocumentationFile>TimeLineUserControl.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -31,7 +32,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>TimeLinesDemo.xml</DocumentationFile>
+    <DocumentationFile>TimeLineUserControl.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -45,9 +46,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <OptionInfer>On</OptionInfer>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>Timeline.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -75,13 +73,6 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ShowTimeLine.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ShowTimeLine.Designer.vb">
-      <DependentUpon>ShowTimeLine.vb</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -97,16 +88,25 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="TimeLineUserControl.Designer.vb">
+      <DependentUpon>TimeLineUserControl.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TimeLineUserControl.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TimeLineViewModel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ShowTimeLine.resx">
-      <DependentUpon>ShowTimeLine.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TimeLineUserControl.resx">
+      <DependentUpon>TimeLineUserControl.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -120,15 +120,6 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Timeline.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TimeLineUserControl\TimeLineUserControl.vbproj">
-      <Project>{1973cb74-bb16-4d7f-90fe-3ea7c08d602e}</Project>
-      <Name>TimeLineUserControl</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
