@@ -6,6 +6,8 @@ Public Class TimeLineUserControl
     'Cycle Thread Prccess Abort Flag
     Dim isThreadContinous As Boolean = True
 
+    Dim isNotDrawCanvas As Boolean = False
+
     'Thread Manual Control Handler
     Dim _event As ManualResetEvent = New ManualResetEvent(True)
 
@@ -94,11 +96,12 @@ Public Class TimeLineUserControl
 
         'マウスがCanvas以外場合、CanvasがRefreshしません
         'Mouse Location (Covert into Canvas Coordinate System)
-        Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
-        If Not timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
-            Return Nothing
+        If isNotDrawCanvas Then
+            Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
+            If Not timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
+                Return Nothing
+            End If
         End If
-
 
         '描画先とするImageオブジェクトを作成する
         Dim pic As New Bitmap(360, 30 * elementCount + 60)
@@ -134,6 +137,7 @@ Public Class TimeLineUserControl
             Dim dv As DataView = DataSource.Tables.Item("innerTable").DefaultView
             dv.Sort = TypeColumn
 
+            'Drawing Schedule Infomations
             For Each r As DataRowView In dv.FindRows("10")
                 DrawSchedule(g,
                                New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
@@ -148,6 +152,7 @@ Public Class TimeLineUserControl
                                String.Format("納入数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
             Next
 
+            'Draw Snap Line
             DrawDayLine(g)
 
             'Drawing Element Points and Detail Infomations
@@ -172,6 +177,7 @@ Public Class TimeLineUserControl
                                False)
             Next
 
+            isNotDrawCanvas = True
         Catch ex As Exception
             Console.WriteLine(ex.Message)
         Finally
@@ -179,6 +185,7 @@ Public Class TimeLineUserControl
             solidBrush.Dispose()
             messageBrush.Dispose()
             g.Dispose()
+
         End Try
 
         Return pic
