@@ -105,8 +105,11 @@ Public Class TimeLineUserControl
         'Brushオブジェクトの作成(半透明、ピンク）
         Dim solidBrush As New SolidBrush(Color.FromArgb(64, Color.LightPink))
 
+        'Brushオブジェクトの作成(半透明、ピンク）
+        Dim messageBrush As New SolidBrush(Color.FromArgb(128, Color.LightGray))
+
         'Fontオブジェクトの作成
-        Dim font_title As Font = New Font(Me.Font, FontStyle.Bold)
+        Dim font_title As Font = New Font(Me.Font, FontStyle.Bold Or FontStyle.Underline)
         Dim font_detial As Font = New Font("MS UI Gothic", 9)
 
         ' Canvas Middle X Position
@@ -115,20 +118,48 @@ Public Class TimeLineUserControl
         Try
 
             'Drawing Title
-            g.DrawString(Title, font_title, Brushes.Black, 5, 5)
+            g.DrawString(Title, font_title, Brushes.Black, 5, 20)
 
             'Drawing Time Line
             g.DrawLine(linePen, x + 10, 40, x + 10, pic.Height - 40)
 
+            Dim dv As DataView = DataSource.Tables.Item("innerTable").DefaultView
+            dv.Sort = TypeColumn
+
+            For Each r As DataRowView In dv.FindRows("10")
+                DrawSchedule(g,
+                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               String.Format("　発注日:{0}", CType(r.Item(OperateDateColumn), Date).ToShortDateString),
+                               String.Format("発注数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
+            Next
+
+            For Each r As DataRowView In dv.FindRows("11")
+                DrawSchedule(g,
+                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               String.Format("　納入日:{0}", CType(r.Item(OperateDateColumn), Date).ToShortDateString),
+                               String.Format("納入数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
+            Next
+
             'Drawing Element Points and Detail Infomations
-            For Each r As DataRow In DataSource.Tables.Item("innerTable").Rows
-                DrawPointElement(g, solidBrush,
-                                 New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
-                                 String.Format("{0}  入庫 {1}",
-                                               CType(r.Item(OperateDateColumn), Date).ToShortDateString,
-                                               CType(r.Item(CountColumn), Integer)),
-                                 String.Format("在庫  {0}", CType(r.Item(TotalColumn), Integer)),
-                                 CType(r.Item(TypeColumn), Boolean))
+            For Each r As DataRowView In dv.FindRows("0")
+
+                DrawPointElement(g, solidBrush, messageBrush,
+                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               String.Format("{0}  入庫",
+                               CType(r.Item(OperateDateColumn), Date).ToShortDateString),
+                               String.Format("数量 {0}", CType(r.Item(CountColumn), Integer).ToString("#,0")),
+                               String.Format("在庫  {0}", CType(r.Item(TotalColumn), Integer).ToString("#,0")),
+                               True)
+            Next
+
+            For Each r As DataRowView In dv.FindRows("1")
+                DrawPointElement(g, solidBrush, messageBrush,
+                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               String.Format("{0}  出庫",
+                               CType(r.Item(OperateDateColumn), Date).ToShortDateString),
+                               String.Format("数量 {0}", CType(r.Item(CountColumn), Integer).ToString("#,0")),
+                               String.Format("在庫  {0}", CType(r.Item(TotalColumn), Integer).ToString("#,0")),
+                               False)
             Next
 
         Catch ex As Exception
@@ -136,6 +167,7 @@ Public Class TimeLineUserControl
         Finally
             linePen.Dispose()
             solidBrush.Dispose()
+            messageBrush.Dispose()
             g.Dispose()
         End Try
 
@@ -152,8 +184,13 @@ Public Class TimeLineUserControl
     ''' <param name="title">Element Information</param>
     ''' <param name="tips">ToolTips Information</param>
     ''' <param name="isStockIn">入出庫フラグ</param>
-    Private Sub DrawPointElement(ByRef g As Graphics, ByRef solidBrush As SolidBrush, p As PointF, f As Font,
-                                 title As String, tips As String, Optional isStockIn As Boolean = True)
+    Private Sub DrawPointElement(ByRef g As Graphics, ByRef solidBrush As SolidBrush, ByRef messageBrush As SolidBrush, p As PointF, f As Font,
+                                 title As String, count As String, tips As String, Optional isStockIn As Boolean = True)
+
+        If isStockIn = 9 Then
+            DrawSchedule(g, p, f, title, tips)
+            Return
+        End If
 
         'Mouse Location (Covert into Canvas Coordinate System)
         Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
@@ -162,11 +199,8 @@ Public Class TimeLineUserControl
         Dim elementRegion As RectangleF = New RectangleF(p, New SizeF(20, 20))
 
         'if Drawing Area contains the Mouse Location
-        'Draw the Highlight and the tooltips information.
+        'Draw the Highlight.
         If elementRegion.Contains(mouse_p) Then
-
-            'Drawing ToolTips Informations
-            g.DrawString(tips, f, Brushes.Red, mouse_p.X + 15, mouse_p.Y + 15)
 
             'Drawing HightLight
             g.FillEllipse(solidBrush, New RectangleF(p.X - 8, p.Y - 8, 36, 36))
@@ -185,12 +219,49 @@ Public Class TimeLineUserControl
         'Drawing Element Point and Detial Informations
         If isStockIn Then
             g.FillEllipse(Brushes.LightGreen, elementRegion)
-            g.DrawString(title, f, Brushes.Black, p.X + 30, p.Y + 5)
+            g.DrawString(title, f, Brushes.Black, p.X + 30, p.Y)
+            g.DrawString(count, f, Brushes.Black, p.X + 30, p.Y + 15)
         Else
             g.FillEllipse(Brushes.Blue, elementRegion)
-            g.DrawString(title, f, Brushes.Black, p.X - 130, p.Y + 5)
+
+            Dim sf As StringFormat = New StringFormat
+            sf.Alignment = StringAlignment.Far
+
+            g.DrawString(title, f, Brushes.Black, p.X - 10, p.Y, sf)
+            g.DrawString(count, f, Brushes.Black, p.X - 10, p.Y + 15, sf)
         End If
 
+        'Draw tooltips information.
+        If elementRegion.Contains(mouse_p) Then
+            'Drawing ToolTips Informations
+
+            Dim sf As StringFormat = New StringFormat
+            sf.Alignment = StringAlignment.Center
+            sf.LineAlignment = StringAlignment.Center
+
+            Dim recMessage As Rectangle = New Rectangle(mouse_p.X + 10, mouse_p.Y + 10, 80, 20)
+
+            g.FillRectangle(messageBrush, recMessage)
+            g.DrawString(tips, f, Brushes.Red, recMessage, sf)
+        End If
+
+    End Sub
+
+    Private Sub DrawSchedule(ByRef g As Graphics, p As PointF, f As Font,
+                                 title As String, tips As String)
+        'Penオブジェクトの作成(幅2灰色)
+        Dim linePen As New Pen(Color.DarkGray, 1)
+        linePen.DashStyle = DashStyle.Dot
+
+        Dim sf As StringFormat = New StringFormat
+        sf.Alignment = StringAlignment.Far
+
+
+        g.DrawLine(linePen, p.X + 10, p.Y + 10, 350, p.Y + 10)
+
+        g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 15, p.Y + 10), New PointF(p.X + 10, p.Y + 15)})
+        g.DrawString(title, f, Brushes.Red, 350, p.Y - 5, sf)
+        g.DrawString(tips, f, Brushes.Red, 350, p.Y + 15, sf)
     End Sub
 
     Private Sub BeforeDataSetBinding(ByRef ds As DataSet)
@@ -269,6 +340,13 @@ Public Class TimeLineUserControl
             timeLineCanvas.SuspendLayout()
             e.Graphics.DrawImage(pic, 0, 0)
             timeLineCanvas.ResumeLayout()
+        End If
+    End Sub
+
+    Private Sub timeLineCanvas_Click(sender As Object, e As EventArgs) Handles timeLineCanvas.Click
+        If DesignMode Then
+            Dim ab As New AboutBox
+            ab.ShowDialog()
         End If
     End Sub
 End Class
