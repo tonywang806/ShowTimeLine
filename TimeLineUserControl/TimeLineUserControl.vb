@@ -140,6 +140,8 @@ Public Class TimeLineUserControl
                                String.Format("納入数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
             Next
 
+            DrawDayLine(g)
+
             'Drawing Element Points and Detail Infomations
             For Each r As DataRowView In dv.FindRows("0")
 
@@ -262,6 +264,33 @@ Public Class TimeLineUserControl
         g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 15, p.Y + 10), New PointF(p.X + 10, p.Y + 15)})
         g.DrawString(title, f, Brushes.Red, 350, p.Y - 5, sf)
         g.DrawString(tips, f, Brushes.Red, 350, p.Y + 15, sf)
+    End Sub
+
+
+    Private Sub DrawDayLine(ByRef g As Graphics)
+        'Mouse Location (Covert into Canvas Coordinate System)
+        Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
+        If timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
+
+
+            'Penオブジェクトの作成(幅2灰色)
+            Dim linePen As New Pen(Color.Red, 2)
+            linePen.DashStyle = DashStyle.Dot
+
+            Dim sf As StringFormat = New StringFormat
+            sf.Alignment = StringAlignment.Far
+
+            Dim y As Integer = mouse_p.Y
+            If y < 40 Then
+                y = 40
+            End If
+
+            If y > (elementCount * 30 + 10) Then
+                y = (elementCount * 30 + 10)
+            End If
+
+            g.DrawLine(linePen, 30, y, 350, y)
+        End If
     End Sub
 
     Private Sub BeforeDataSetBinding(ByRef ds As DataSet)

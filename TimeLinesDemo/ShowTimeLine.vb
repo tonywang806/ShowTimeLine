@@ -114,8 +114,8 @@
                 g.DrawString(Math.Floor((((e.X - .X) / .Width) * 10)).ToString, C1Chart1.Font, Brushes.Red, e.X, .Y + .Height + 10)
                 g.DrawString(Math.Floor(((1 - ((e.Y - .Y) / .Height)) * 18000)).ToString(), C1Chart1.Font, Brushes.Red, .X - 10, e.Y, sf)
             End With
-        Else
-            C1Chart1.Invalidate()
+            'Else
+            '    C1Chart1.Invalidate()
         End If
         C1Chart1.ResumeLayout()
     End Sub
