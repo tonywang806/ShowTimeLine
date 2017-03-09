@@ -6,6 +6,8 @@ Public Class TimeLineUserControl
     'Cycle Thread Prccess Abort Flag
     Dim isThreadContinous As Boolean = True
 
+    Dim isNotDrawCanvas As Boolean = False
+
     'Thread Manual Control Handler
     Dim _event As ManualResetEvent = New ManualResetEvent(True)
 
@@ -92,6 +94,15 @@ Public Class TimeLineUserControl
             Return Nothing
         End If
 
+        'マウスがCanvas以外場合、CanvasがRefreshしません
+        'Mouse Location (Covert into Canvas Coordinate System)
+        If isNotDrawCanvas Then
+            Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
+            If Not timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
+                Return Nothing
+            End If
+        End If
+
         '描画先とするImageオブジェクトを作成する
         Dim pic As New Bitmap(360, 30 * elementCount + 60)
 
@@ -126,6 +137,7 @@ Public Class TimeLineUserControl
             Dim dv As DataView = DataSource.Tables.Item("innerTable").DefaultView
             dv.Sort = TypeColumn
 
+            'Drawing Schedule Infomations
             For Each r As DataRowView In dv.FindRows("10")
                 DrawSchedule(g,
                                New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
@@ -139,6 +151,9 @@ Public Class TimeLineUserControl
                                String.Format("　納入日:{0}", CType(r.Item(OperateDateColumn), Date).ToShortDateString),
                                String.Format("納入数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
             Next
+
+            'Draw Snap Line
+            DrawDayLine(g)
 
             'Drawing Element Points and Detail Infomations
             For Each r As DataRowView In dv.FindRows("0")
@@ -162,6 +177,7 @@ Public Class TimeLineUserControl
                                False)
             Next
 
+            isNotDrawCanvas = True
         Catch ex As Exception
             Console.WriteLine(ex.Message)
         Finally
@@ -169,6 +185,7 @@ Public Class TimeLineUserControl
             solidBrush.Dispose()
             messageBrush.Dispose()
             g.Dispose()
+
         End Try
 
         Return pic
@@ -186,11 +203,6 @@ Public Class TimeLineUserControl
     ''' <param name="isStockIn">入出庫フラグ</param>
     Private Sub DrawPointElement(ByRef g As Graphics, ByRef solidBrush As SolidBrush, ByRef messageBrush As SolidBrush, p As PointF, f As Font,
                                  title As String, count As String, tips As String, Optional isStockIn As Boolean = True)
-
-        If isStockIn = 9 Then
-            DrawSchedule(g, p, f, title, tips)
-            Return
-        End If
 
         'Mouse Location (Covert into Canvas Coordinate System)
         Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
@@ -259,9 +271,36 @@ Public Class TimeLineUserControl
 
         g.DrawLine(linePen, p.X + 10, p.Y + 10, 350, p.Y + 10)
 
-        g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 15, p.Y + 10), New PointF(p.X + 10, p.Y + 15)})
+        g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 20, p.Y + 15), New PointF(p.X + 20, p.Y + 5)})
         g.DrawString(title, f, Brushes.Red, 350, p.Y - 5, sf)
         g.DrawString(tips, f, Brushes.Red, 350, p.Y + 15, sf)
+    End Sub
+
+
+    Private Sub DrawDayLine(ByRef g As Graphics)
+        'Mouse Location (Covert into Canvas Coordinate System)
+        Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
+        If timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
+
+
+            'Penオブジェクトの作成(幅2灰色)
+            Dim linePen As New Pen(Color.Red, 2)
+            linePen.DashStyle = DashStyle.Dot
+
+            Dim sf As StringFormat = New StringFormat
+            sf.Alignment = StringAlignment.Far
+
+            Dim y As Integer = mouse_p.Y
+            If y < 40 Then
+                y = 40
+            End If
+
+            If y > (elementCount * 30 + 10) Then
+                y = (elementCount * 30 + 10)
+            End If
+
+            g.DrawLine(linePen, 30, y, 350, y)
+        End If
     End Sub
 
     Private Sub BeforeDataSetBinding(ByRef ds As DataSet)

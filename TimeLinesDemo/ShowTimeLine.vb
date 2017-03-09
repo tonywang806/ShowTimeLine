@@ -111,12 +111,18 @@
                 g.DrawLine(p, .X, e.Y, .X + .Width, e.Y)
                 g.DrawLine(p, e.X, .Y, e.X, .Y + .Height)
 
-                g.DrawString(Math.Floor((((e.X - .X) / .Width) * 10)).ToString, C1Chart1.Font, Brushes.Red, e.X, .Y + .Height + 10)
-                g.DrawString(Math.Floor(((1 - ((e.Y - .Y) / .Height)) * 18000)).ToString(), C1Chart1.Font, Brushes.Red, .X - 10, e.Y, sf)
+                g.DrawString(Math.Floor((((e.X - .X) / .Width) * 10)).ToString, C1Chart1.Font, Brushes.Red, e.X, .Y + .Height - 10)
+                g.DrawString(CalculateGoodsCount(e.Y, .Y, .Height).ToString(), C1Chart1.Font, Brushes.Red, .X + 10, e.Y)
             End With
-        Else
-            C1Chart1.Invalidate()
+            'Else
+            '    C1Chart1.Invalidate()
         End If
         C1Chart1.ResumeLayout()
     End Sub
+
+    Private Function CalculateGoodsCount(mouseLocationY As Double, canvasLocationY As Double, canvasHeight As Double) As Integer
+        Dim scaleRate As Double = 1 - (mouseLocationY - canvasLocationY) / canvasHeight
+        Dim count As Integer = Math.Floor(scaleRate * 18000)
+        Return (Math.Floor(count / 100)) * 100
+    End Function
 End Class
