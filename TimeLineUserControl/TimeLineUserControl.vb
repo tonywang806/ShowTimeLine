@@ -92,6 +92,14 @@ Public Class TimeLineUserControl
             Return Nothing
         End If
 
+        'マウスがCanvas以外場合、CanvasがRefreshしません
+        'Mouse Location (Covert into Canvas Coordinate System)
+        Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
+        If Not timeLineCanvas.ClientRectangle.Contains(mouse_p) Then
+            Return Nothing
+        End If
+
+
         '描画先とするImageオブジェクトを作成する
         Dim pic As New Bitmap(360, 30 * elementCount + 60)
 
@@ -189,11 +197,6 @@ Public Class TimeLineUserControl
     Private Sub DrawPointElement(ByRef g As Graphics, ByRef solidBrush As SolidBrush, ByRef messageBrush As SolidBrush, p As PointF, f As Font,
                                  title As String, count As String, tips As String, Optional isStockIn As Boolean = True)
 
-        If isStockIn = 9 Then
-            DrawSchedule(g, p, f, title, tips)
-            Return
-        End If
-
         'Mouse Location (Covert into Canvas Coordinate System)
         Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
 
@@ -261,7 +264,7 @@ Public Class TimeLineUserControl
 
         g.DrawLine(linePen, p.X + 10, p.Y + 10, 350, p.Y + 10)
 
-        g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 15, p.Y + 10), New PointF(p.X + 10, p.Y + 15)})
+        g.FillPolygon(Brushes.Black, New PointF() {New PointF(p.X + 10, p.Y + 10), New PointF(p.X + 20, p.Y + 15), New PointF(p.X + 20, p.Y + 5)})
         g.DrawString(title, f, Brushes.Red, 350, p.Y - 5, sf)
         g.DrawString(tips, f, Brushes.Red, 350, p.Y + 15, sf)
     End Sub
