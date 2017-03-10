@@ -1,7 +1,5 @@
 ﻿Public Class ShowTimeLine
 
-    Private chartPlotRectangle As Rectangle
-
     Private Sub ShowTimeLine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TimeLineUserControl1.SuspendLayout()
         TimeLineUserControl1.Title = "発注明細：17-03-5111-00"
@@ -80,43 +78,30 @@
         TimeLineUserControl1.ResumeLayout()
     End Sub
 
-    Private Sub C1Chart1_PaintPlotArea(sender As Object, e As PaintEventArgs) Handles C1Chart1.PaintPlotArea
-        chartPlotRectangle = e.ClipRectangle
-
-        'Dim g As Graphics = e.Graphics
-        'With e.ClipRectangle
-
-        '    Dim gap As Integer = .Width / 10
-        '    g.DrawLine(Pens.Red, .Location.X + gap, .Location.Y, .Location.X + gap, .Location.Y + .Height)
-        '    g.DrawLine(Pens.Red, .Location.X + gap * 6, .Location.Y, .Location.X + gap * 6, .Location.Y + .Height)
-        'End With
-
-    End Sub
-
     Private Sub C1Chart1_MouseMove(sender As Object, e As MouseEventArgs) Handles C1Chart1.MouseMove
 
         C1Chart1.SuspendLayout()
 
-        If chartPlotRectangle.Contains(e.Location) Then
-            C1Chart1.Refresh()
+        With New Rectangle(C1Chart1.ChartArea.PlotArea.Location, C1Chart1.ChartArea.PlotArea.Size)
+            If .Contains(e.Location) Then
+                C1Chart1.Refresh()
 
-            Dim g As Graphics = C1Chart1.CreateGraphics
-            Dim p As Pen = New Pen(Brushes.Red, 2)
-            p.DashStyle = Drawing2D.DashStyle.Dash
+                Dim g As Graphics = C1Chart1.CreateGraphics
+                Dim p As Pen = New Pen(Brushes.Red, 2)
+                p.DashStyle = Drawing2D.DashStyle.Dash
 
-            Dim sf As StringFormat = New StringFormat()
-            sf.Alignment = StringAlignment.Far
+                Dim sf As StringFormat = New StringFormat()
+                sf.Alignment = StringAlignment.Far
 
-            With chartPlotRectangle
+
                 g.DrawLine(p, .X, e.Y, .X + .Width, e.Y)
                 g.DrawLine(p, e.X, .Y, e.X, .Y + .Height)
 
                 g.DrawString(Math.Floor((((e.X - .X) / .Width) * 10)).ToString, C1Chart1.Font, Brushes.Red, e.X, .Y + .Height - 10)
                 g.DrawString(CalculateGoodsCount(e.Y, .Y, .Height).ToString(), C1Chart1.Font, Brushes.Red, .X + 10, e.Y)
-            End With
-            'Else
-            '    C1Chart1.Invalidate()
-        End If
+            End If
+        End With
+
         C1Chart1.ResumeLayout()
     End Sub
 
