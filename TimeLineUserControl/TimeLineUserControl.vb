@@ -315,9 +315,9 @@ Public Class TimeLineUserControl
                 y = (elementCount * 30 + 20)
             End If
 
-
             snapLocation_Y = y
             g.DrawLine(linePen, 30, y, 350, y)
+
             CalculateSnapTotalCount()
         End If
     End Sub
@@ -429,15 +429,24 @@ Public Class TimeLineUserControl
 
         Dim dv As DataView = GetCurrentSnapDataRows()
 
-        For Each dr As DataRowView In dv
-            Dim recType As Integer = CType(dr.Item(TypeColumn), Integer)
-            If recType = 0 Then
-                snapStackInTotalCount += CType(dr.Item(CountColumn), Integer)
+        Try
+            Dim result As Object
+            result = dv.ToTable.Compute(String.Format("Sum({0})", CountColumn),
+                                        String.Format("{0}=0", TypeColumn))
+            If result IsNot DBNull.Value Then
+                snapStackInTotalCount = result
             End If
-            If recType = 1 Then
-                snapStackOutTotalCount += CType(dr.Item(CountColumn), Integer)
+
+            result = dv.ToTable.Compute(String.Format("Sum({0})", CountColumn),
+                                        String.Format("{0}=1", TypeColumn))
+            If result IsNot DBNull.Value Then
+                snapStackOutTotalCount = result
             End If
-        Next
+
+        Catch ex As Exception
+            Console.WriteLine(ex.Message)
+        End Try
+
         snapTotalCountInWarehouse = snapStackInTotalCount - snapStackOutTotalCount
 
     End Sub
