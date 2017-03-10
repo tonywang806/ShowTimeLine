@@ -12,6 +12,11 @@
     Private elementCount As Integer
     Private bool_IsDisplayGrid As Boolean
 
+    Const GapDayColumn As String = "GapDay"
+
+    Private snapStackInTotalCount As Integer = 0
+    Private snapStackOutTotalCount As Integer = 0
+    Private snapTotalCountInWarehouse As Integer = 0
 
     Public Property DataSource As DataSet
         Get
@@ -85,4 +90,8 @@
             bool_IsDisplayGrid = value
         End Set
     End Property
+
+    Public Function GetLengthofLine() As Integer
+        Return 30 * elementCount + 60
+    End Function
 End Class

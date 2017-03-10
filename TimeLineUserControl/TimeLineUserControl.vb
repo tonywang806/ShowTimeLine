@@ -14,6 +14,8 @@ Public Class TimeLineUserControl
     'DataBinding Delegete
     Public Event BeforeBinding As System.EventHandler
 
+    Dim snapLocation_Y As Double
+
 
     Public Sub New()
 
@@ -104,7 +106,7 @@ Public Class TimeLineUserControl
         End If
 
         '描画先とするImageオブジェクトを作成する
-        Dim pic As New Bitmap(360, 30 * elementCount + 60)
+        Dim pic As New Bitmap(360, GetLengthofLine)
 
         'ImageオブジェクトのGraphicsオブジェクトを作成する
         Dim g As Graphics = Graphics.FromImage(pic)
@@ -126,10 +128,22 @@ Public Class TimeLineUserControl
         ' Canvas Middle X Position
         Dim x As Integer = 160
 
+        Dim sf As StringFormat = New StringFormat
+        sf.Alignment = StringAlignment.Far
+
         Try
 
             'Drawing Title
             g.DrawString(Title, font_title, Brushes.Black, 5, 20)
+
+            g.DrawString("累計入庫：", font_detial, Brushes.Blue, 65, 35, sf)
+            g.DrawString(snapStackInTotalCount.ToString("#,0"), font_detial, Brushes.Blue, 100, 35, sf)
+
+            g.DrawString("累計出庫：", font_detial, Brushes.Blue, 65, 50, sf)
+            g.DrawString(snapStackOutTotalCount.ToString("#,0"), font_detial, Brushes.Blue, 100, 50, sf)
+
+            g.DrawString("合計：", font_detial, Brushes.Blue, 65, 65, sf)
+            g.DrawString(snapTotalCountInWarehouse.ToString("#,0"), font_detial, Brushes.Blue, 100, 65, sf)
 
             'Drawing Time Line
             g.DrawLine(linePen, x + 10, 40, x + 10, pic.Height - 40)
@@ -140,14 +154,14 @@ Public Class TimeLineUserControl
             'Drawing Schedule Infomations
             For Each r As DataRowView In dv.FindRows("10")
                 DrawSchedule(g,
-                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               New PointF(x, CType(r.Item(GapDayColumn), Integer) * 30), font_detial,
                                String.Format("　発注日:{0}", CType(r.Item(OperateDateColumn), Date).ToShortDateString),
                                String.Format("発注数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
             Next
 
             For Each r As DataRowView In dv.FindRows("11")
                 DrawSchedule(g,
-                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               New PointF(x, CType(r.Item(GapDayColumn), Integer) * 30), font_detial,
                                String.Format("　納入日:{0}", CType(r.Item(OperateDateColumn), Date).ToShortDateString),
                                String.Format("納入数量:{0}", CType(r.Item(CountColumn), Integer).ToString("#,0")))
             Next
@@ -159,21 +173,19 @@ Public Class TimeLineUserControl
             For Each r As DataRowView In dv.FindRows("0")
 
                 DrawPointElement(g, solidBrush, messageBrush,
-                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               New PointF(x, CType(r.Item(GapDayColumn), Integer) * 30), font_detial,
                                String.Format("{0}  入庫",
                                CType(r.Item(OperateDateColumn), Date).ToShortDateString),
                                String.Format("数量 {0}", CType(r.Item(CountColumn), Integer).ToString("#,0")),
-                               String.Format("在庫  {0}", CType(r.Item(TotalColumn), Integer).ToString("#,0")),
                                True)
             Next
 
             For Each r As DataRowView In dv.FindRows("1")
                 DrawPointElement(g, solidBrush, messageBrush,
-                               New PointF(x, CType(r.Item("GapDay"), Integer) * 30), font_detial,
+                               New PointF(x, CType(r.Item(GapDayColumn), Integer) * 30), font_detial,
                                String.Format("{0}  出庫",
                                CType(r.Item(OperateDateColumn), Date).ToShortDateString),
                                String.Format("数量 {0}", CType(r.Item(CountColumn), Integer).ToString("#,0")),
-                               String.Format("在庫  {0}", CType(r.Item(TotalColumn), Integer).ToString("#,0")),
                                False)
             Next
 
@@ -185,7 +197,6 @@ Public Class TimeLineUserControl
             solidBrush.Dispose()
             messageBrush.Dispose()
             g.Dispose()
-
         End Try
 
         Return pic
@@ -199,16 +210,21 @@ Public Class TimeLineUserControl
     ''' <param name="p">Drawing Position</param>
     ''' <param name="f">Font</param>
     ''' <param name="title">Element Information</param>
-    ''' <param name="tips">ToolTips Information</param>
     ''' <param name="isStockIn">入出庫フラグ</param>
     Private Sub DrawPointElement(ByRef g As Graphics, ByRef solidBrush As SolidBrush, ByRef messageBrush As SolidBrush, p As PointF, f As Font,
-                                 title As String, count As String, tips As String, Optional isStockIn As Boolean = True)
+                                 title As String, count As String, Optional isStockIn As Boolean = True)
 
         'Mouse Location (Covert into Canvas Coordinate System)
         Dim mouse_p As Point = timeLineCanvas.PointToClient(MousePosition)
 
         'Drawing Area
         Dim elementRegion As RectangleF = New RectangleF(p, New SizeF(20, 20))
+
+        'Drawing Time Line
+        'Penオブジェクトの作成(幅2灰色)
+        Dim linePen As New Pen(Color.DarkGray, 2)
+        linePen.DashStyle = DashStyle.Dot
+        g.DrawLine(linePen, p.X - 10, p.Y + 10, p.X + 30, p.Y + 10)
 
         'if Drawing Area contains the Mouse Location
         'Draw the Highlight.
@@ -254,7 +270,7 @@ Public Class TimeLineUserControl
             Dim recMessage As Rectangle = New Rectangle(mouse_p.X + 10, mouse_p.Y + 10, 80, 20)
 
             g.FillRectangle(messageBrush, recMessage)
-            g.DrawString(tips, f, Brushes.Red, recMessage, sf)
+            g.DrawString(String.Format("在庫:{0}", snapTotalCountInWarehouse.ToString("#,0")), f, Brushes.Red, recMessage, sf)
         End If
 
     End Sub
@@ -295,11 +311,14 @@ Public Class TimeLineUserControl
                 y = 40
             End If
 
-            If y > (elementCount * 30 + 10) Then
-                y = (elementCount * 30 + 10)
+            If y > (elementCount * 30 + 20) Then
+                y = (elementCount * 30 + 20)
             End If
 
+
+            snapLocation_Y = y
             g.DrawLine(linePen, 30, y, 350, y)
+            CalculateSnapTotalCount()
         End If
     End Sub
 
@@ -310,7 +329,7 @@ Public Class TimeLineUserControl
             dv.Sort = String.Format("{0} ASC", OperateDateColumn)
 
             Dim SortTabel As DataTable = dv.ToTable("innerTable")
-            SortTabel.Columns.Add("GapDay", GetType(Integer))
+            SortTabel.Columns.Add(GapDayColumn, GetType(Integer))
             SortTabel.AcceptChanges()
 
             ds.Tables.Add(SortTabel)
@@ -343,7 +362,7 @@ Public Class TimeLineUserControl
                 End If
                 currentDate = CType(r.Item(OperateDateColumn), Date)
             End If
-            r.Item("GapDay") = ret
+            r.Item(GapDayColumn) = ret
         Next
         Return ret
     End Function
@@ -388,4 +407,39 @@ Public Class TimeLineUserControl
             ab.ShowDialog()
         End If
     End Sub
+    'Public Function GetCurrentSnapLocationY()
+    '    Return snapLocation_Y
+    'End Function
+
+    Public Function GetCurrentSnapDataRows() As DataView
+
+        Dim currentGapDay As Integer = Math.Ceiling((snapLocation_Y - 40) / 30)
+        'Console.WriteLine("Gap Days:{0}", currentGapDay)
+        Dim dv As DataView = DataSource.Tables.Item("innerTable").Copy().DefaultView
+        dv.Sort = GapDayColumn
+        dv.RowFilter = String.Format("{0} <= {1}", GapDayColumn, currentGapDay)
+
+        Return dv
+    End Function
+
+    Public Sub CalculateSnapTotalCount()
+        snapStackInTotalCount = 0
+        snapStackOutTotalCount = 0
+        snapTotalCountInWarehouse = 0
+
+        Dim dv As DataView = GetCurrentSnapDataRows()
+
+        For Each dr As DataRowView In dv
+            Dim recType As Integer = CType(dr.Item(TypeColumn), Integer)
+            If recType = 0 Then
+                snapStackInTotalCount += CType(dr.Item(CountColumn), Integer)
+            End If
+            If recType = 1 Then
+                snapStackOutTotalCount += CType(dr.Item(CountColumn), Integer)
+            End If
+        Next
+        snapTotalCountInWarehouse = snapStackInTotalCount - snapStackOutTotalCount
+
+    End Sub
+
 End Class
